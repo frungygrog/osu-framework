@@ -15,6 +15,7 @@ layout(std140, set = 0, binding = 0) uniform m_BlendParameters
 	lowp float g_MaskCutoff;
 	lowp float g_BackdropOpacity;
 	lowp float g_BackdropTintStrength;
+	highp vec4 g_MaskRect;
 };
 
 layout(set = 1, binding = 0) uniform lowp texture2D m_Texture;
@@ -35,9 +36,10 @@ layout(location = 0) out vec4 o_Colour;
 
 void main(void)
 {
-	vec2 wrappedCoord = wrap(v_TexCoord, v_TexRect);
+	vec2 backgroundCoord = v_TexCoord; // FBO textures are already mapped 0..1 in v_TexCoord
+	vec2 maskCoord = wrap(v_TexCoord, g_MaskRect);
 
-	vec4 mask = wrappedSampler(wrappedCoord, v_TexRect, m_Mask, m_MaskSampler, -0.9);
+	vec4 mask = wrappedSampler(maskCoord, g_MaskRect, m_Mask, m_MaskSampler, -0.9);
 
 	// Compute colored foreground using the gradient texture and the mask's distance field (r) and alpha (a).
 	lowp vec4 pathCol = texture(sampler2D(m_GradientTexture, m_GradientSampler), TexRect1.xy + vec2(mask.r, 0.0) * TexRect1.zw, -0.9);
@@ -54,8 +56,10 @@ void main(void)
 	if (foreground.a > 0.00001)
 		fg_straight = foreground.rgb / foreground.a;
 
+	// Scale mask cutoff by the overall alpha to prevent the blur from "popping" out during fades.
 	if (mask.a > g_MaskCutoff) {
-		vec4 background = wrappedSampler(wrappedCoord, v_TexRect, m_Texture, m_Sampler, -0.9) * g_BackdropOpacity;
+		// Multiply by v_Colour.a to ensure the blur part of the effect fades in with the slider.
+		vec4 background = wrappedSampler(backgroundCoord, v_TexRect, m_Texture, m_Sampler, -0.9) * g_BackdropOpacity * v_Colour.a;
 
 		if (background.a > 0.0) {
 			// background.rgb is Premultiplied here.
@@ -69,7 +73,7 @@ void main(void)
 			// mix(PremulBG, StraightFG, fg.a) -> PremulBG * (1-fg.a) + StraightFG * fg.a = PremulBG * (1-fg.a) + PremulFG.
 			// Result is Premul Total. 
 			// We divide by alpha to return Straight Total, as expected by the vec4 construct.
-			o_Colour = vec4(mix(background.rgb, fg_straight, foreground.a) / alpha, alpha);
+			o_Colour = vec4(mix(background.rgb, fg_straight, foreground.a) / max(alpha, 0.0001), alpha);
 		} else {
 			o_Colour = vec4(fg_straight, foreground.a);
 		}

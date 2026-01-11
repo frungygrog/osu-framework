@@ -117,6 +117,8 @@ namespace osu.Framework.Graphics
 
             using (BindFrameBuffer(target))
             {
+                renderer.PushOrtho(new RectangleF(0, 0, target.Size.X, target.Size.Y));
+
                 float radians = float.DegreesToRadians(blurRotation);
 
                 blurParametersBuffer.Data = blurParametersBuffer.Data with
@@ -131,6 +133,8 @@ namespace osu.Framework.Graphics
                 blurShader.Bind();
                 renderer.DrawFrameBuffer(current, rect, ColourInfo.SingleColour(Color4.White));
                 blurShader.Unbind();
+
+                renderer.PopOrtho();
             }
 
             renderer.PopDepthInfo();
@@ -166,11 +170,18 @@ namespace osu.Framework.Graphics
             {
                 blendParametersBuffer ??= renderer.CreateUniformBuffer<BlendParameters>();
 
+                var maskRect = SharedData.MainBuffer.Texture.GetTextureRect();
+
                 blendParametersBuffer.Data = blendParametersBuffer.Data with
                 {
                     MaskCutoff = maskCutoff,
                     BackdropOpacity = backdropOpacity,
                     BackdropTintStrength = backdropTintStrength,
+                    MaskRect = new Vector4(
+                        MathF.Min(maskRect.Left, maskRect.Right),
+                        MathF.Min(maskRect.Top, maskRect.Bottom),
+                        MathF.Max(maskRect.Left, maskRect.Right),
+                        MathF.Max(maskRect.Top, maskRect.Bottom))
                 };
 
                 pathParametersBuffer ??= renderer.CreateUniformBuffer<PathTextureParameters>();
@@ -224,6 +235,7 @@ namespace osu.Framework.Graphics
             public UniformFloat BackdropOpacity;
             public UniformFloat BackdropTintStrength;
             private readonly UniformPadding4 pad1;
+            public UniformVector4 MaskRect;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
