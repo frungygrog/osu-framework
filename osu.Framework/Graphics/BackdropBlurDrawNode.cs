@@ -58,9 +58,7 @@ namespace osu.Framework.Graphics
             effectBufferSize = new Vector2(MathF.Ceiling(DrawRectangle.Width * effectBufferScale.X), MathF.Ceiling(DrawRectangle.Height * effectBufferScale.Y));
 
             blurSigma = Source.BlurSigma * effectBufferScale;
-            // Compute blur radius from unscaled sigma to ensure blur is not skipped at low effectBufferScale values.
-            // The actual blur operation uses the scaled sigma which is correct for the scaled buffer.
-            blurRadius = new Vector2I(Blur.KernelSize(Source.BlurSigma.X), Blur.KernelSize(Source.BlurSigma.Y));
+            blurRadius = new Vector2I(Blur.KernelSize(blurSigma.X), Blur.KernelSize(blurSigma.Y));
             blurRotation = Source.BlurRotation;
 
             maskCutoff = Source.MaskCutoff;
