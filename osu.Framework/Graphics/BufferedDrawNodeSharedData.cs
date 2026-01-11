@@ -84,7 +84,7 @@ namespace osu.Framework.Graphics
 
         public void Initialise(IRenderer renderer)
         {
-            this.renderer = renderer;
+            Renderer = renderer;
             IsInitialised = true;
         }
 

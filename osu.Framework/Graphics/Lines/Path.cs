@@ -317,7 +317,11 @@ namespace osu.Framework.Graphics.Lines
 
         protected virtual BufferedDrawNodeSharedData CreateSharedData() => new BufferedDrawNodeSharedData(new[] { RenderBufferFormat.D16 }, clipToRootNode: true);
 
-        protected override DrawNode CreateDrawNode() => new PathBufferedDrawNode(this, new PathDrawNode(this), sharedData);
+        private BufferedDrawNodeSharedData sharedData;
+
+        protected BufferedDrawNodeSharedData SharedData => sharedData ??= CreateSharedData();
+
+        protected override DrawNode CreateDrawNode() => new PathBufferedDrawNode(this, new PathDrawNode(this), SharedData);
 
         private class PathBufferedDrawNode : BufferedDrawNode
         {
@@ -373,7 +377,7 @@ namespace osu.Framework.Graphics.Lines
             texture?.Dispose();
             texture = null;
 
-            sharedData.Dispose();
+            sharedData?.Dispose();
         }
     }
 }

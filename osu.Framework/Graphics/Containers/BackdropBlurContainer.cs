@@ -44,6 +44,21 @@ namespace osu.Framework.Graphics.Containers
 
         private Vector2 blurSigma;
 
+        private float grayscaleStrength;
+
+        public float GrayscaleStrength
+        {
+            get => grayscaleStrength;
+            set
+            {
+                if (grayscaleStrength == value)
+                    return;
+
+                grayscaleStrength = value;
+                Invalidate(Invalidation.DrawNode);
+            }
+        }
+
         public float BlurRotation { get; set; }
 
         public virtual float BackdropOpacity => 1 - MathF.Pow(1 - base.DrawColourInfo.Colour.MaxAlpha, 2);
