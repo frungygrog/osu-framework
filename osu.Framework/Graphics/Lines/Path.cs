@@ -315,13 +315,9 @@ namespace osu.Framework.Graphics.Lines
             return result;
         }
 
-        protected virtual BufferedDrawNodeSharedData CreateSharedData() => new BufferedDrawNodeSharedData(clipToRootNode: true);
+        private readonly BufferedDrawNodeSharedData sharedData = new BufferedDrawNodeSharedData(clipToRootNode: true);
 
-        private BufferedDrawNodeSharedData sharedData;
-
-        protected BufferedDrawNodeSharedData SharedData => sharedData ??= CreateSharedData();
-
-        protected override DrawNode CreateDrawNode() => new PathBufferedDrawNode(this, new PathDrawNode(this), SharedData);
+        protected override DrawNode CreateDrawNode() => new PathBufferedDrawNode(this, new PathDrawNode(this), sharedData);
 
         private class PathBufferedDrawNode : BufferedDrawNode
         {
@@ -377,7 +373,7 @@ namespace osu.Framework.Graphics.Lines
             texture?.Dispose();
             texture = null;
 
-            SharedData.Dispose();
+            sharedData.Dispose();
         }
     }
 }
