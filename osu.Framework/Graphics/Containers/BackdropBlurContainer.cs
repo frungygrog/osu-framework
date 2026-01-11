@@ -12,6 +12,7 @@ using osu.Framework.Graphics.Shaders;
 using osu.Framework.Layout;
 using osuTK;
 using osuTK.Graphics;
+using osu.Framework.Graphics.Textures;
 
 namespace osu.Framework.Graphics.Containers
 {
@@ -102,6 +103,8 @@ namespace osu.Framework.Graphics.Containers
         private RectangleF lastBackBufferDrawRect;
 
         RectangleF IBackdropBlurDrawable.LastBackBufferDrawRect => lastBackBufferDrawRect;
+
+        Texture IBackdropBlurDrawable.GradientTexture => null;
 
         protected override void Update()
         {

@@ -3,6 +3,7 @@
 
 using osu.Framework.Graphics.Primitives;
 using osu.Framework.Graphics.Shaders;
+using osu.Framework.Graphics.Textures;
 using osuTK;
 
 namespace osu.Framework.Graphics
@@ -48,5 +49,7 @@ namespace osu.Framework.Graphics
         public IShader BlendShader { get; }
 
         public RectangleF LastBackBufferDrawRect { get; }
+
+        public Texture GradientTexture { get; }
     }
 }

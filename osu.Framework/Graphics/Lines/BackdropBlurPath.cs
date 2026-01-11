@@ -12,6 +12,8 @@ using osu.Framework.Graphics.Shaders;
 using osu.Framework.Layout;
 using osuTK;
 
+using osu.Framework.Graphics.Textures;
+
 namespace osu.Framework.Graphics.Lines
 {
     /// <summary>
@@ -69,6 +71,8 @@ namespace osu.Framework.Graphics.Lines
         private RectangleF lastBackBufferDrawRect;
 
         RectangleF IBackdropBlurDrawable.LastBackBufferDrawRect => lastBackBufferDrawRect;
+
+        Texture IBackdropBlurDrawable.GradientTexture => Texture;
 
         protected override void Update()
         {

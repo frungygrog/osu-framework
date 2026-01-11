@@ -10,6 +10,7 @@ using osu.Framework.Graphics.Primitives;
 using osu.Framework.Graphics.Rendering;
 using osu.Framework.Graphics.Shaders;
 using osu.Framework.Graphics.Shaders.Types;
+using osu.Framework.Graphics.Textures;
 using osu.Framework.Utils;
 using osuTK;
 using osuTK.Graphics;
@@ -44,6 +45,9 @@ namespace osu.Framework.Graphics
         private float backdropOpacity;
         private float backdropTintStrength;
 
+        private Texture gradientTexture;
+        private Vector4 gradientTextureRect;
+
         public override void ApplyState()
         {
             base.ApplyState();
@@ -63,6 +67,10 @@ namespace osu.Framework.Graphics
 
             blurShader = Source.BlurShader;
             blendShader = Source.BlendShader;
+
+            gradientTexture = Source.GradientTexture;
+            var rect = gradientTexture?.GetTextureRect() ?? new RectangleF();
+            gradientTextureRect = new Vector4(rect.Left, rect.Top, rect.Width, rect.Height);
         }
 
         protected override void PopulateContents(IRenderer renderer)
@@ -133,6 +141,7 @@ namespace osu.Framework.Graphics
         protected override bool RequiresEffectBufferRedraw => true;
 
         private IUniformBuffer<BlendParameters> blendParametersBuffer;
+        private IUniformBuffer<PathTextureParameters> pathParametersBuffer;
 
         protected override void DrawContents(IRenderer renderer)
         {
@@ -149,9 +158,14 @@ namespace osu.Framework.Graphics
                     BackdropTintStrength = backdropTintStrength,
                 };
 
+                pathParametersBuffer ??= renderer.CreateUniformBuffer<PathTextureParameters>();
+                pathParametersBuffer.Data = new PathTextureParameters { TexRect1 = gradientTextureRect };
+
                 renderer.BindTexture(SharedData.MainBuffer.Texture, 1);
+                renderer.BindTexture(gradientTexture, 2);
 
                 blendShader.BindUniformBlock("m_BlendParameters", blendParametersBuffer);
+                blendShader.BindUniformBlock("m_PathTextureParameters", pathParametersBuffer);
                 blendShader.Bind();
                 renderer.DrawFrameBuffer(SharedData.CurrentEffectBuffer, DrawRectangle, DrawColourInfo.Colour);
                 blendShader.Unbind();
@@ -174,6 +188,8 @@ namespace osu.Framework.Graphics
         {
             base.Dispose(isDisposing);
             blurParametersBuffer?.Dispose();
+            blendParametersBuffer?.Dispose();
+            pathParametersBuffer?.Dispose();
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -193,6 +209,12 @@ namespace osu.Framework.Graphics
             public UniformFloat BackdropOpacity;
             public UniformFloat BackdropTintStrength;
             private readonly UniformPadding4 pad1;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private record struct PathTextureParameters
+        {
+            public UniformVector4 TexRect1;
         }
     }
 
