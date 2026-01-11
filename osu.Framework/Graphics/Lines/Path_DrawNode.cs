@@ -16,7 +16,7 @@ namespace osu.Framework.Graphics.Lines
 {
     public partial class Path
     {
-        private class PathDrawNode : DrawNode
+        protected class PathDrawNode : DrawNode
         {
             private const float precision = 0.01f; // Smallest allowed segment length. Used for segment reduction algorithm.
             private const int max_res = 24;
