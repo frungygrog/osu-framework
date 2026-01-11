@@ -143,6 +143,21 @@ namespace osu.Framework.Graphics
         private IUniformBuffer<BlendParameters> blendParametersBuffer;
         private IUniformBuffer<PathTextureParameters> pathParametersBuffer;
 
+        protected override void BindUniformResources(IShader shader, IRenderer renderer)
+        {
+            base.BindUniformResources(shader, renderer);
+
+            if ((blurRadius.X > 0 || blurRadius.Y > 0) && backdropOpacity > 0)
+                return;
+
+            pathParametersBuffer ??= renderer.CreateUniformBuffer<PathTextureParameters>();
+            pathParametersBuffer.Data = new PathTextureParameters { TexRect1 = gradientTextureRect };
+
+            shader.BindUniformBlock("m_PathTextureParameters", pathParametersBuffer);
+
+            gradientTexture?.Bind(1);
+        }
+
         protected override void DrawContents(IRenderer renderer)
         {
             renderer.SetBlend(DrawColourInfo.Blending);
