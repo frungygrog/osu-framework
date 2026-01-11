@@ -85,13 +85,13 @@ namespace osu.Framework.Graphics
             if (!SharedData.IsInitialised)
                 SharedData.Initialise(renderer);
 
-            if (RequiresRedraw)
+            if (RequiresMainBufferRedraw || RequiresEffectBufferRedraw)
             {
                 FrameStatistics.Increment(StatisticsCounterType.FBORedraw);
 
                 SharedData.ResetCurrentEffectBuffer();
 
-                using (establishFrameBufferViewport(renderer))
+                if (RequiresMainBufferRedraw)
                 {
                     // Fill the frame buffer with drawn children
                     using (BindFrameBuffer(SharedData.MainBuffer))
@@ -106,7 +106,8 @@ namespace osu.Framework.Graphics
                         renderer.PopOrtho();
                     }
 
-                    PopulateContents(renderer);
+                    if (RequiresEffectBufferRedraw)
+                        PopulateContents(renderer);
                 }
 
                 SharedData.DrawVersion = GetDrawVersion();
@@ -119,6 +120,10 @@ namespace osu.Framework.Graphics
 
             UnbindTextureShader(renderer);
         }
+
+        protected virtual bool RequiresMainBufferRedraw => RequiresRedraw;
+
+        protected virtual bool RequiresEffectBufferRedraw => RequiresRedraw;
 
         /// <summary>
         /// Populates the contents of the effect buffers of <see cref="SharedData"/>.
@@ -146,12 +151,14 @@ namespace osu.Framework.Graphics
         protected ValueInvokeOnDisposal<IFrameBuffer> BindFrameBuffer(IFrameBuffer frameBuffer)
         {
             // This setter will also take care of allocating a texture of appropriate size within the frame buffer.
-            frameBuffer.Size = frameBufferSize;
+            frameBuffer.Size = GetFrameBufferSize(frameBuffer);
 
             frameBuffer.Bind();
 
             return new ValueInvokeOnDisposal<IFrameBuffer>(frameBuffer, static b => b.Unbind());
         }
+
+protected virtual Vector2 GetFrameBufferSize(IFrameBuffer frameBuffer) => frameBufferSize;
 
         private ValueInvokeOnDisposal<(BufferedDrawNode node, IRenderer renderer)> establishFrameBufferViewport(IRenderer renderer)
         {

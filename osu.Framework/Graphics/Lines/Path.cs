@@ -315,7 +315,7 @@ namespace osu.Framework.Graphics.Lines
             return result;
         }
 
-        private readonly BufferedDrawNodeSharedData sharedData = new BufferedDrawNodeSharedData(clipToRootNode: true);
+        protected virtual BufferedDrawNodeSharedData CreateSharedData() => new BufferedDrawNodeSharedData(new[] { RenderBufferFormat.D16 }, clipToRootNode: true);
 
         protected override DrawNode CreateDrawNode() => new PathBufferedDrawNode(this, new PathDrawNode(this), sharedData);
 
