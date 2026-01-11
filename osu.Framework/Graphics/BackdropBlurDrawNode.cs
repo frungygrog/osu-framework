@@ -27,6 +27,7 @@ namespace osu.Framework.Graphics
 
         protected new BackdropBlurDrawNodeSharedData SharedData => (BackdropBlurDrawNodeSharedData)base.SharedData;
 
+
         private Vector2 blurSigma;
         private Vector2I blurRadius;
         private float blurRotation;
@@ -67,6 +68,11 @@ namespace osu.Framework.Graphics
 
         protected override void PopulateContents(IRenderer renderer)
         {
+            // Capture the parent framebuffer before the base class switches to our own buffer.
+            // This is needed so the blur can sample from the background content.
+            SharedData.ParentFrameBuffer = renderer.FrameBuffer;
+            SharedData.ResetBlurPass();
+
             base.PopulateContents(renderer);
 
             // we need the intermediate blur pass in order to draw the final blending pass, so we always have to draw both passes.
@@ -203,18 +209,38 @@ namespace osu.Framework.Graphics
         {
         }
 
+        /// <summary>
+        /// The parent's framebuffer, captured before switching to this drawable's buffer.
+        /// This is used to sample background content for the blur effect.
+        /// </summary>
+        public IFrameBuffer ParentFrameBuffer { get; set; }
+
+        /// <summary>
+        /// Flag to track if this is the first blur pass (should sample from parent buffer).
+        /// </summary>
+        private bool isFirstBlurPass = true;
+
+        /// <summary>
+        /// Resets the state for a new draw cycle. Called before blur passes.
+        /// </summary>
+        public void ResetBlurPass()
+        {
+            isFirstBlurPass = true;
+        }
+
         public IFrameBuffer GetCurrentSourceBuffer(out bool isBackBuffer)
         {
-            var buffer = CurrentEffectBuffer;
-
-            if (buffer == MainBuffer && Renderer.FrameBuffer != null)
+            // For the first blur pass, we need to sample from the parent's framebuffer
+            // (which contains the background content to blur), not the current effect buffer.
+            if (isFirstBlurPass && ParentFrameBuffer != null)
             {
+                isFirstBlurPass = false;
                 isBackBuffer = true;
-                return Renderer.FrameBuffer;
+                return ParentFrameBuffer;
             }
 
             isBackBuffer = false;
-            return buffer;
+            return CurrentEffectBuffer;
         }
     }
 }

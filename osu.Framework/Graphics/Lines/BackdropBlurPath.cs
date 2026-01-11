@@ -64,6 +64,11 @@ namespace osu.Framework.Graphics.Lines
         {
             blurShader = shaders.Load(VertexShaderDescriptor.TEXTURE_2, FragmentShaderDescriptor.BLUR);
             blendShader = shaders.Load(VertexShaderDescriptor.TEXTURE_2, FragmentShaderDescriptor.BACKDROP_BLUR_BLEND);
+
+            // Update ref count now that backbufferProvider has been resolved.
+            // This is necessary because BlurSigma may have been set in the constructor
+            // before dependencies were injected.
+            updateRefCount();
         }
 
         private RectangleF lastBackBufferDrawRect;
@@ -73,6 +78,9 @@ namespace osu.Framework.Graphics.Lines
         protected override void Update()
         {
             base.Update();
+
+            // Force redraw each frame to capture latest backbuffer content.
+            Invalidate(Invalidation.DrawNode);
 
             lastBackBufferDrawRect = backbufferProvider.ScreenSpaceDrawQuad.AABBFloat;
         }
