@@ -56,8 +56,9 @@ void main(void)
 	if (foreground.a > 0.00001)
 		fg_straight = foreground.rgb / foreground.a;
 
-	// Scale mask cutoff by the overall alpha to prevent the blur from "popping" out during fades.
-	if (mask.a > g_MaskCutoff) {
+	// Use mask.r (gradient position) for cutoff instead of mask.a (alpha) to exclude the shadow region.
+	// mask.r is 0.0 at the outer edge (shadow) and 1.0 at the center, so cutoff excludes low positions.
+	if (mask.r > g_MaskCutoff) {
 		// Multiply by v_Colour.a to ensure the blur part of the effect fades in with the slider.
 		vec4 background = wrappedSampler(backgroundCoord, v_TexRect, m_Texture, m_Sampler, -0.9) * g_BackdropOpacity * v_Colour.a;
 
